@@ -1,41 +1,90 @@
 from utils import import_data, submit
-import networkx as nx
 
 
 def part_1(data: []) -> int:
     def pre_process(data: []) -> {}:
-        rule_dict = {}
+        ascendant_dict = {}
         for rule in data:
-            split_rule = rule.split(' contain ', 1)
-            inner_bags = split_rule[1].split(', ')
-            outer_bag = split_rule[0][:-5]
-            for bag in inner_bags:
-                if bag.find('no other bags') != -1:
-                    amount = None
-                    bag = None
+            split_rule = rule.split(' bags contain ', 1)
+            children = split_rule[1].split(', ')
+            parent = split_rule[0]
+            for child in children:
+                if 'no other bags' in child:
+                    continue
                 else:
-                    amount = int(bag.split(' ', 1)[0])
-                    bag = ' '.join(bag.split(' ')[1:-1])
-                if outer_bag in rule_dict:
-                    rule_dict[outer_bag].append((bag, amount))
-                else:
-                    rule_dict[outer_bag] = [(bag, amount)]
-        return rule_dict
+                    amount = child.split(' ')[0]
+                    child = ' '.join(child.split(' ')[1:3])
+                    if child in ascendant_dict:
+                        ascendant_dict[child].append((parent, amount))
+                    else:
+                        ascendant_dict[child] = [(parent, amount)]
+        return ascendant_dict
 
-    bag_set = set()
+    def traverse_bags(node_name: str, b_map: {}, node_set: set) -> None:
+        node_set.add(node_name)
+
+        if node_name not in b_map:
+            return
+
+        for node in b_map[node_name]:
+            traverse_bags(node[0], b_map, node_set)
+        b_map.pop(node_name, None)
+
+        return
+
     data = pre_process(data)
+    start_node = 'shiny gold'
+    node_set = set()
+    traverse_bags(start_node, data, node_set)
+    return len(node_set) - 1  # -1 b/c of the shiny gold bag itself
 
-    for rule in data:
-        if rule[1].find('shiny gold') != -1:
-            bag_set.add(rule[0])
-    return len(bag_set)
+
+def part_2(data: {}) -> int:
+    def pre_process(data: []) -> {}:
+        descendant_dict = {}
+        for rule in data:
+            split_rule = rule.split(' bags contain ', 1)
+            children = split_rule[1].split(', ')
+            parent = split_rule[0]
+            for child in children:
+                if 'no other bags' in child:
+                    descendant_dict[parent] = None
+                else:
+                    amount = child.split(' ')[0]
+                    child = ' '.join(child.split(' ')[1:3])
+                    if parent in descendant_dict:
+                        descendant_dict[parent].append((child, int(amount)))
+                    else:
+                        descendant_dict[parent] = [(child, int(amount))]
+        return descendant_dict
+
+    def traverse_bags(node_name: str, b_map: {}) -> int:
+        children = b_map[node_name]
+        counter = 0
+
+        if children is None:
+            return counter
+
+        for child in children:
+            counter += child[1] + child[1] * traverse_bags(child[0], b_map)
+        return counter
+
+
+    data = pre_process(data)
+    start_node = 'shiny gold'
+    count = traverse_bags(start_node, data)
+
+    return count
 
 
 if __name__ == "__main__":
     data = import_data(7, __file__, True)
     count = part_1(data)
     print(count)
-    #res, status = submit(7, 1, count)
-    #print(f"Status code: {status}")
-    #if status == 200:
-    #    print(res)
+
+    count = part_2(data)
+    print(count)
+    res, status = submit(7, 2, count)
+    print(f"Status code: {status}")
+    if status == 200:
+        print(res)
