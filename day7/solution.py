@@ -12,12 +12,11 @@ def part_1(data: []) -> int:
                 if 'no other bags' in child:
                     continue
                 else:
-                    amount = child.split(' ')[0]
                     child = ' '.join(child.split(' ')[1:3])
                     if child in ascendant_dict:
-                        ascendant_dict[child].append((parent, amount))
+                        ascendant_dict[child].append(parent)
                     else:
-                        ascendant_dict[child] = [(parent, amount)]
+                        ascendant_dict[child] = [parent]
         return ascendant_dict
 
     def traverse_bags(node_name: str, b_map: {}, node_set: set) -> None:
@@ -27,7 +26,7 @@ def part_1(data: []) -> int:
             return
 
         for node in b_map[node_name]:
-            traverse_bags(node[0], b_map, node_set)
+            traverse_bags(node, b_map, node_set)
         b_map.pop(node_name, None)
 
         return
@@ -85,6 +84,6 @@ if __name__ == "__main__":
     count = part_2(data)
     print(count)
     res, status = submit(7, 2, count)
-    print(f"Status code: {status}")
-    if status == 200:
-        print(res)
+    #print(f"Status code: {status}")
+    #if status == 200:
+    #    print(res)
